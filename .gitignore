@@ -1,0 +1,4 @@
+data/*
+__pycache__/*
+encryption_module/__pycache__/*
+gui_module/__pycache__/*
