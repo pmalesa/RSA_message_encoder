@@ -2,9 +2,10 @@ import os
 import random
 import math
 import numpy as np
+
+import sys
+
 from .math_module import MathModule
-
-
 
 class EncryptionModule:
     def __init__(self, mode = "ECB", generate_new_keys = True):
@@ -13,8 +14,14 @@ class EncryptionModule:
         self.__data_directory = "./data"
         self.__public_key_file = "public_key.txt"
         self.__private_key_file = "private_key.txt"
-        self.__block_size = 4
+        self.__block_size = 32   # in bytes
         self.__chosen_mode = mode
+        self.__bits = 860   # for 2048-bit key values - TODO: not really, the size might be greater than the number of bytes the number actually needs (use 1024) 
+
+        # Initializing an initialization vector, which is a self.__block_size byte long random number
+        self.__iv = random.randrange(2 ** (8 * self.__block_size - 1), 2 ** (8 * self.__block_size) - 1)    # used for CBC mode of operation
+
+        print("[INFO] Using", self.__chosen_mode, "mode with", self.__block_size, "byte block size.")
 
         # If generate_new_keys is False, but there are no private and
         # public key files generated then the program generates them anyway.
@@ -108,6 +115,7 @@ class EncryptionModule:
         5) Then we receive a list of decrypted blocks of integer values,
         6) We transform the list of decrypted integer values block by block into a string of characters.
         '''
+
         if len(ciphertext) == 0:
             return
 
@@ -133,10 +141,88 @@ class EncryptionModule:
         return decrypted_message
 
     def __encrypt_CBC(self, message):
-        return 0
+        '''
+        Description:
+        1) We create an empty list of message blocks (blocks of size equal to self.__block_size bytes),
+        2) We create and initialize a message_block_value with the ASCII value of the message's first character,
+        3) Then we iterate over the rest of message's characters and add their ASCII values to the subsequent blocks,
+        4) One block contains a number which is in a form of 4 concatenated ASCII decimal values of the characters,
+        5) This number (one block) is then XOR'ed with the previous block's encrypted value and then taken to the power e and applied modulo n
+           (in case of the first block we use the initialization vector for the XOR operation),
+        6) The obtained value will be the one ciphertext block value of of one message block,
+        '''
+
+        if len(message) == 0:
+            return
+
+        n, e = self.__load_public_key()
+        blocks = list()
+        block_value = ord(message[0])
+        for i in range(1, len(message)):            
+            # If the mas block size is reached add the ciphertext to the list and reset it
+            if i % self.__block_size == 0:
+                blocks.append(block_value)
+                block_value = 0
+
+            # Multiply by 1000 to shift the number by 3 digits to the left
+            block_value = block_value * 1000 + ord(message[i])
+
+        # Adding the last block
+        blocks.append(block_value)
+
+        # Encrypt all of the numbers
+        xor_value = self.__iv
+        for i in range(len(blocks)):
+            blocks[i] ^= xor_value
+            encrypted_value = pow(blocks[i], e, n)
+            xor_value = encrypted_value
+            block = str(encrypted_value)
+            blocks[i] = block
+
+        ciphertext = " ".join(blocks)
+
+        return ciphertext
+
 
     def __decrypt_CBC(self, ciphertext):
-        return 0
+        '''
+        Description:
+        1) The ciphertext is a string made of blocks of integer values separated by spaces.
+        2) We split this ciphertext string into a list of string blocks, which represent some integer value,
+        3) We convert those string blocks into integer blocks and obtain a list of integer values,
+        4) We iterate over that list and decrypt the blocks one by one by applying the power d and then modulo n,
+            4.1) After each block's decryption we apply a XOR operation with the previous block's encrypted value
+                 (in case of the first block we use the initialization vector for the XOR operation),
+        5) Then we receive a list of decrypted blocks of integer values,
+        6) We transform the list of decrypted integer values block by block into a string of characters.
+        '''
+
+        if len(ciphertext) == 0:
+            return
+
+        n, d = self.__load_private_key()
+        blocks = ciphertext.split()
+
+        for i in range(len(blocks)):
+            blocks[i] = int(blocks[i])
+
+        decrypted_message = ""
+
+
+        xor_value = self.__iv
+        for i in range(len(blocks)):
+            decrypted_value = pow(blocks[i], d, n) ^ xor_value
+            xor_value = blocks[i]
+            blocks[i] = decrypted_value
+
+            tmp = ""
+
+            for j in range(self.__block_size):
+                tmp = chr(blocks[i] % 1000) + tmp
+                blocks[i] //= 1000
+            decrypted_message += tmp
+
+        return decrypted_message
 
     def __generate_pair_of_keys(self):
         '''
@@ -151,8 +237,8 @@ class EncryptionModule:
         print("[INFO] Generation a new pair of keys...")
 
         # p, q = self.__m.choose_random_primes()
-        p = self.__mm.generate_large_prime()
-        q = self.__mm.generate_large_prime()
+        p = self.__mm.generate_large_prime(self.__bits)
+        q = self.__mm.generate_large_prime(self.__bits)
 
         n = p * q
         phi = (p - 1) * (q - 1)

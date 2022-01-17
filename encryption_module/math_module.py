@@ -3,6 +3,8 @@ import random
 import math
 import numpy as np
 
+import sys
+
 class MathModule:
     def __init__(self):
         self.__data_directory = "./data"
@@ -14,16 +16,15 @@ class MathModule:
         # Load first few hundred primes
         self.__first_primes = self.__load_first_few_hundred_primes(500)
 
-    def generate_large_prime(self):
+    def generate_large_prime(self, n):
         '''
         This method generates a large prime,
-        which length is between 1024 bits and 2048 bits
+        which has n bit length
         '''
 
-        n = 1024
         prime_candidate = 0
         while True:
-            prime_candidate = self.__get_low_level_prime(1024)
+            prime_candidate = self.__get_low_level_prime(n)
             if self.__is_miller_rabin_passed(prime_candidate):
                 break
         return prime_candidate
@@ -78,9 +79,6 @@ class MathModule:
             x += phi
         return x
 
-    def __generate_n_bit_random(self, n):
-        return random.randrange(2 ** (n - 1) + 1, 2 ** (n) - 1)
-
     def __get_low_level_prime(self, n):
         '''
         Generate a prime candidate divisible by first primes.
@@ -96,6 +94,9 @@ class MathModule:
                     break                
                 else:
                     return prime_candidate
+
+    def __generate_n_bit_random(self, n):
+        return random.randrange(2 ** (n - 1) + 1, 2 ** n - 1)
 
     def __is_miller_rabin_passed(self, candidate):
         '''

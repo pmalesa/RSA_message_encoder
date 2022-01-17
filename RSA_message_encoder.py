@@ -4,7 +4,7 @@ from gui_module.message_encoder_gui import MessageEncoderGUI
 from encryption_module.encryption_module import EncryptionModule
 
 def main():
-    em = EncryptionModule(mode = "ECB", generate_new_keys = False)
+    em = EncryptionModule(mode = "CBC", generate_new_keys = False)
 
     message = "Hello, my name is Piotr Malesa and I am a student"
     print("Message:", message)
