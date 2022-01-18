@@ -38,10 +38,50 @@ class EncryptionModule:
             if not (os.path.isfile(private_key_filename) and os.path.isfile(public_key_filename)):
                self.__generate_pair_of_keys() 
 
-    def set_mode_of_operation(self, mode):
+    def get_mode(self):
+        return self.__chosen_mode
+
+    def get_block_size(self):
+        return self.__block_size
+
+    def set_mode(self, mode):
         if mode != "ECB" and mode != "CBC":
             return
         self.__chosen_mode = mode
+
+    def set_block_size(self, new_size):
+        self.__block_size = new_size
+
+    def generate_pair_of_keys(self):
+        '''
+        This method generates a pair of keys - public and private
+        and saves them in two separate files. Since both the public
+        and the private key contains the information about the n value
+        being a product of two chosen large primes, then the first line
+        in the created files will be this value and the second line will
+        be either e (public key case) or d (private key case) value.
+        '''
+
+        print("[INFO] Generation a new pair of keys...")
+
+        # p, q = self.__m.choose_random_primes()
+        p = self.__mm.generate_large_prime(self.__bits)
+        q = self.__mm.generate_large_prime(self.__bits)
+
+        n = p * q
+        phi = (p - 1) * (q - 1)
+
+        e = self.__choose_encryption_value(phi)
+        d = self.__mm.calculate_multiplicative_inverse(e, phi)
+        
+        # Save generated keys to corresponding files
+        if not os.path.isdir(self.__data_directory):
+            os.mkdir(self.__data_directory)
+
+        self.__save_public_key(n, e)
+        self.__save_private_key(n, d)
+
+        print("[INFO] Generation of new pair of keys finished.")
 
     def encrypt(self, message):
         '''
@@ -223,37 +263,6 @@ class EncryptionModule:
             decrypted_message += tmp
 
         return decrypted_message
-
-    def __generate_pair_of_keys(self):
-        '''
-        This method generates a pair of keys - public and private
-        and saves them in two separate files. Since both the public
-        and the private key contains the information about the n value
-        being a product of two chosen large primes, then the first line
-        in the created files will be this value and the second line will
-        be either e (public key case) or d (private key case) value.
-        '''
-
-        print("[INFO] Generation a new pair of keys...")
-
-        # p, q = self.__m.choose_random_primes()
-        p = self.__mm.generate_large_prime(self.__bits)
-        q = self.__mm.generate_large_prime(self.__bits)
-
-        n = p * q
-        phi = (p - 1) * (q - 1)
-
-        e = self.__choose_encryption_value(phi)
-        d = self.__mm.calculate_multiplicative_inverse(e, phi)
-        
-        # Save generated keys to corresponding files
-        if not os.path.isdir(self.__data_directory):
-            os.mkdir(self.__data_directory)
-
-        self.__save_public_key(n, e)
-        self.__save_private_key(n, d)
-
-        print("[INFO] Generation of new pair of keys finished.")
 
     def __choose_encryption_value(self, phi):
         '''
