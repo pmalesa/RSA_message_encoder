@@ -3,8 +3,6 @@ import random
 import math
 import numpy as np
 
-import sys
-
 from .math_module import MathModule
 
 class EncryptionModule:
@@ -14,19 +12,17 @@ class EncryptionModule:
         self.__data_directory = "./data"
         self.__public_key_file = "public_key.txt"
         self.__private_key_file = "private_key.txt"
-        self.__block_size = 32   # in bytes
+        self.__block_size = 2   # in bytes
         self.__chosen_mode = mode
-        self.__bits = 860   # for 2048-bit key values - TODO: not really, the size might be greater than the number of bytes the number actually needs (use 1024) 
+        self.__bits = 1024   # for 2048-bit key values - TODO: not really, the size might be greater than the number of bytes the number actually needs (use 1024) 
 
         # Initializing an initialization vector, which is a self.__block_size byte long random number
         self.__iv = random.randrange(2 ** (8 * self.__block_size - 1), 2 ** (8 * self.__block_size) - 1)    # used for CBC mode of operation
 
-        print("[INFO] Using", self.__chosen_mode, "mode with", self.__block_size, "byte block size.")
-
         # If generate_new_keys is False, but there are no private and
         # public key files generated then the program generates them anyway.
         if generate_new_keys:
-            self.__generate_pair_of_keys()
+            self.generate_pair_of_keys()
         else:
             # Check whether the data directory exists
             if not os.path.isdir(self.__data_directory):
@@ -36,7 +32,7 @@ class EncryptionModule:
             public_key_filename = self.__data_directory + "/" + self.__public_key_file
             
             if not (os.path.isfile(private_key_filename) and os.path.isfile(public_key_filename)):
-               self.__generate_pair_of_keys() 
+               self.generate_pair_of_keys() 
 
     def get_mode(self):
         return self.__chosen_mode
@@ -90,6 +86,7 @@ class EncryptionModule:
         that was previously generated and saved to a file.
         '''
 
+        print("Mode:", self.__chosen_mode, "\nBlock size:", self.__block_size)
         if self.__chosen_mode == "ECB":
             return self.__encrypt_ECB(message)
         elif self.__chosen_mode == "CBC":
@@ -101,7 +98,6 @@ class EncryptionModule:
         mode of operation (ECB or CBC) using the private key
         that was previously generated and saved to a file.
         '''
-
         if self.__chosen_mode == "ECB":
             return self.__decrypt_ECB(ciphertext)
         elif self.__chosen_mode == "CBC":
@@ -174,8 +170,10 @@ class EncryptionModule:
             tmp = ""
 
             for c in range(self.__block_size):
-                tmp = chr(blocks[i] % 1000) + tmp
+                if not blocks[i] == 0:
+                    tmp = chr(blocks[i] % 1000) + tmp
                 blocks[i] //= 1000
+
             decrypted_message += tmp
 
         return decrypted_message
@@ -258,7 +256,8 @@ class EncryptionModule:
             tmp = ""
 
             for j in range(self.__block_size):
-                tmp = chr(blocks[i] % 1000) + tmp
+                if not blocks[i] == 0:
+                    tmp = chr(blocks[i] % 1000) + tmp
                 blocks[i] //= 1000
             decrypted_message += tmp
 

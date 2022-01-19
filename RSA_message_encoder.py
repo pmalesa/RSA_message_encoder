@@ -11,3 +11,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+# Zrób testy czasowe dla różnych długości wiadomości i różnych block size'ach (no i oczywiście 2 trybach)

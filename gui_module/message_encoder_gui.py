@@ -3,6 +3,8 @@ from encryption_module.encryption_module import EncryptionModule
 import tkinter as tk
 from tkinter import ttk
 
+import time
+
 class MessageEncoderGUI:
     def __init__(self):
         self.__em = EncryptionModule(mode = "ECB", generate_new_keys = False )
@@ -20,6 +22,7 @@ class MessageEncoderGUI:
 
         self.__window = tk.Tk()
         self.__window.title("RSA Message Encoder")
+        self.__window.resizable(False, False)
 
         self.__frm_main = tk.Frame(
             bg = self.__bg_color
@@ -63,6 +66,7 @@ class MessageEncoderGUI:
             self.__cbx_mode.current(0)
         else:
             self.__cbx_mode.current(1)
+        self.__cbx_mode.bind("<<ComboboxSelected>>", self.__cbx_mode_on_selected)
         #--------------------------------------------        
 
         #----------------BLOCK-SIZE------------------ 
@@ -78,15 +82,17 @@ class MessageEncoderGUI:
         )
         self.__lbl_block_size.grid(column = 0, row = 2, padx = self.__padx, pady = self.__pady)
         
-        self.__txt_block_size = tk.Entry(
+        self.__ent_block_size = tk.Entry(
             master = self.__frm_main,
             relief = tk.GROOVE,
             width = 8,
             bg = "white",
             fg = "black"
         )
-        self.__txt_block_size.grid(sticky = "w", column = 1, row = 2, padx = self.__padx, pady = self.__pady)
-        self.__txt_block_size.insert(0, str(self.__em.get_block_size()))
+        self.__ent_block_size.grid(sticky = "w", column = 1, row = 2, padx = self.__padx, pady = self.__pady)
+        self.__ent_block_size.bind("<Return>", self.__ent_block_size_on_set)
+        self.__ent_block_size.bind("<FocusOut>", self.__ent_block_size_on_set)
+        self.__ent_block_size.insert(0, str(self.__em.get_block_size()))
         #--------------------------------------------
         
         #---------------GENERATE-KEYS----------------  
@@ -121,6 +127,7 @@ class MessageEncoderGUI:
             master = self.__frm_main,
             relief = tk.GROOVE,
             height = 5,
+            width = 100,
             bg = "white",
             fg = "black"
         )
@@ -157,6 +164,7 @@ class MessageEncoderGUI:
             master = self.__frm_main,
             relief = tk.GROOVE,
             height = 5,
+            width = 100,
             bg = "white",
             fg = "black",
             state = "disabled"
@@ -194,6 +202,7 @@ class MessageEncoderGUI:
             master = self.__frm_main,
             relief = tk.GROOVE,
             height = 5,
+            width = 100,
             bg = "white",
             fg = "black",
             state = "disabled"
@@ -214,6 +223,27 @@ class MessageEncoderGUI:
         self.__btn_exit.grid(column = 1, row = 7, padx = self.__padx, pady = self.__pady)   
         self.__btn_exit.bind("<ButtonRelease-1>", self.__exit_button_click)
 
+
+    def __cbx_mode_on_selected(self, event):
+        selected_mode = self.__cbx_mode.get()
+        if selected_mode == self.__em.get_mode():
+            return
+        self.__em.set_mode(selected_mode)
+        print("[INFO] Using", selected_mode, "mode.")
+
+    def __ent_block_size_on_set(self, event):
+        if not self.__ent_block_size.get().isdecimal():
+            self.__ent_block_size.delete(0, tk.END)
+            self.__ent_block_size.insert(0, "1")
+            block_size = 1
+        else:
+            block_size = int(self.__ent_block_size.get())
+
+        if block_size == self.__em.get_block_size():
+            return
+        self.__em.set_block_size(int(block_size))
+        print("[INFO] Using", block_size, "byte blocks.")
+
     def __btn_generate_keys_on_release(self, event):
         self.__em.generate_pair_of_keys()
 
@@ -221,8 +251,22 @@ class MessageEncoderGUI:
         message = self.__txt_message.get("1.0", tk.END)
         message.strip()
         message = message[:-1]
-        print("Encrypted message:", message)
+        if message == "":
+            self.__txt_cipher.configure(state = "normal")
+            self.__txt_cipher.delete("1.0", tk.END)
+            self.__txt_cipher.configure(state = "disabled")
+            self.__txt_decrypted.configure(state = "normal")
+            self.__txt_decrypted.delete("1.0", tk.END)
+            self.__txt_decrypted.configure(state = "disabled")
+            return
+        print("*----------ENCRYPTION----------*")
+        start_time = time.time()
         ciphertext = self.__em.encrypt(message)
+        finish_time = time.time()
+        print("Message:", message)
+        print("Encryption time: ", finish_time - start_time, "seconds")
+        print("*------------------------------*")
+        # print("Ciphertext:", ciphertext)
         self.__txt_cipher.configure(state = "normal")
         self.__txt_cipher.delete("1.0", tk.END)
         self.__txt_cipher.insert("1.0", ciphertext)
@@ -231,12 +275,20 @@ class MessageEncoderGUI:
     def __btn_decrypt_on_release(self, event):
         ciphertext = self.__txt_cipher.get("1.0", tk.END)
         ciphertext.strip()
-        decrypted_message = self.__em.decrypt(ciphertext)
+        ciphertext = ciphertext[:-1]
+        if ciphertext == "":
+            return
+        print("*----------DECRYPTION----------*")
+        start_time = time.time()
+        decrypted_message = str(self.__em.decrypt(ciphertext))
+        finish_time = time.time()
         print("Decrypted message:", decrypted_message)
-        self.__txt_decrypted.config(state = "normal")
+        print("Decryption time: ", finish_time - start_time, "seconds")
+        print("*------------------------------*")
+        self.__txt_decrypted.configure(state = "normal")
         self.__txt_decrypted.delete("1.0", tk.END)
         self.__txt_decrypted.insert("1.0", decrypted_message)
-        self.__txt_decrypted.config(state = "disabled")
+        self.__txt_decrypted.configure(state = "disabled")
 
     def __exit_button_click(self, event):
         self.__window.destroy()
