@@ -245,7 +245,10 @@ class MessageEncoderGUI:
         print("[INFO] Using", block_size, "byte blocks.")
 
     def __btn_generate_keys_on_release(self, event):
+        start_time = time.time()
         self.__em.generate_pair_of_keys()
+        finish_time = time.time()
+        print("KEY GENERATION: ", finish_time - start_time, "seconds")
 
     def __btn_encrypt_on_release(self, event):
         message = self.__txt_message.get("1.0", tk.END)

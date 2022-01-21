@@ -14,7 +14,7 @@ class EncryptionModule:
         self.__private_key_file = "private_key.txt"
         self.__block_size = 2   # in bytes
         self.__chosen_mode = mode
-        self.__bits = 1024   # for 2048-bit key values - TODO: not really, the size might be greater than the number of bytes the number actually needs (use 1024) 
+        self.__bits = 1024   # for 2048-bit key values
 
         # Initializing an initialization vector, which is a self.__block_size byte long random number
         self.__iv = random.randrange(2 ** (8 * self.__block_size - 1), 2 ** (8 * self.__block_size) - 1)    # used for CBC mode of operation
