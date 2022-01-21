@@ -9,7 +9,7 @@ from Crypto.Cipher import AES, PKCS1_OAEP
 
 import ast
 
-n = 128
+n = 32
 
 # IMPLEMENTATION OF RSA BLOCK CIPHER WITH n-byte BLOCKS
 def encrypt(message):
@@ -19,8 +19,12 @@ def encrypt(message):
     cipher_rsa = PKCS1_OAEP.new(public_key)
     message = [message[i:i+n] for i in range(0, len(message), n)]
     ciphertext = list()
+    total_length = 0
     for block in message:
-        ciphertext.append(cipher_rsa.encrypt(block))
+        one_block = cipher_rsa.encrypt(block)
+        ciphertext.append(one_block)
+        total_length += len(one_block)
+    print("*** CIPHERTEXT LENGTH:", total_length)
     return ciphertext
 
 def decrypt(ciphertext):
@@ -37,6 +41,7 @@ def main():
     n = 4096
     message = "".join(random.choice(string.ascii_lowercase) for x in range(n)).encode("utf-8")
 
+    # --------------------KEY-GENERATION--------------------
     # print("Generating keys...")
     # start_time = time.time()
     # key = RSA.generate(2048)

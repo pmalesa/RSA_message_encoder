@@ -366,24 +366,3 @@ class EncryptionModule:
 
 
 
-
-
-
-
-
-
-
-
-
-
-        # TOO LONG EXECUTION (__choose_encryption_value)
-        # Find value from the set (1, phi) relatively prime with phi
-        # candidates = list()
-        # for i in range(2, phi):
-        #     if (math.gcd(i, phi) == 0):
-        #         candidates.append(i)
-        # if len(candidates) == 0:
-        #     print("No numbers from the set (1, phi) that are relatively prime with phi were found.")
-        #     return
-        # index = random.randint(0, len(candidates) - 1)
-        # e = candidates[index]

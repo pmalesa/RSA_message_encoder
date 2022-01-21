@@ -210,6 +210,19 @@ class MessageEncoderGUI:
         self.__txt_decrypted.grid(column = 1, row = 6, padx = self.__padx, pady = self.__pady)
         #--------------------------------------------        
 
+        self.__btn_clear = tk.Button(
+            master = self.__frm_main,
+            relief = tk.GROOVE,
+            text = "Clear",
+            width = 10,
+            height = 1,
+            bg = self.__button_color,
+            fg = "black",
+            activebackground = self.__button_hover_color         
+        )
+        self.__btn_clear.grid(column = 2, row = 6, padx = self.__padx, pady = self.__pady)   
+        self.__btn_clear.bind("<ButtonRelease-1>", self.__btn_clear_click)
+
         self.__btn_exit = tk.Button(
             master = self.__frm_main,
             relief = tk.GROOVE,
@@ -222,7 +235,6 @@ class MessageEncoderGUI:
         )
         self.__btn_exit.grid(column = 1, row = 7, padx = self.__padx, pady = self.__pady)   
         self.__btn_exit.bind("<ButtonRelease-1>", self.__exit_button_click)
-
 
     def __cbx_mode_on_selected(self, event):
         selected_mode = self.__cbx_mode.get()
@@ -269,6 +281,10 @@ class MessageEncoderGUI:
         print("Message:", message)
         print("Encryption time: ", finish_time - start_time, "seconds")
         print("*------------------------------*")
+
+        print("***  MESSAGE LENGTH:", len(message))
+        print("***  CIPHERTEXT LENGTH:", len(ciphertext))
+
         # print("Ciphertext:", ciphertext)
         self.__txt_cipher.configure(state = "normal")
         self.__txt_cipher.delete("1.0", tk.END)
@@ -291,6 +307,14 @@ class MessageEncoderGUI:
         self.__txt_decrypted.configure(state = "normal")
         self.__txt_decrypted.delete("1.0", tk.END)
         self.__txt_decrypted.insert("1.0", decrypted_message)
+        self.__txt_decrypted.configure(state = "disabled")
+
+    def __btn_clear_click(self, event):
+        self.__txt_cipher.configure(state = "normal")
+        self.__txt_cipher.delete("1.0", tk.END)
+        self.__txt_cipher.configure(state = "disabled")
+        self.__txt_decrypted.configure(state = "normal")
+        self.__txt_decrypted.delete("1.0", tk.END)
         self.__txt_decrypted.configure(state = "disabled")
 
     def __exit_button_click(self, event):
